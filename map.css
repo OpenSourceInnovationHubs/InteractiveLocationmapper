@@ -1,0 +1,76 @@
+html,
+body {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+}
+
+header {
+	background: #343a40;
+	color: #fff;
+	padding: 0.75rem 1rem;
+	text-align: center;
+}
+
+header h1 a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.toolbar {
+	background: #ffffff;
+	padding: 0.5rem 1rem;
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+}
+
+/* Main area between toolbar and footer */
+main {
+	flex: 1 1 auto;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Map fills the main area */
+#map {
+	flex: 1 1 auto;
+	width: 100%;
+	min-height: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Footer with buttons always visible */
+footer {
+	padding: 0.5rem 1rem 0.75rem;
+	background: #f8f9fa;
+}
+
+.btn-group-map {
+	display: flex;
+	justify-content: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+@media (max-width: 576px) {
+	#mapForm .form-control {
+		max-width: 100%;
+	}
+}
+
+input[type=url] {
+	color: #0064c3;
+}
+
+#container {
+	text-align: center;
+}
+
+#registerlink {
+	font-size: 9pt;
+}

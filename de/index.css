@@ -1,0 +1,32 @@
+body {
+    padding-top: 2rem;
+    background-color: #f9f9f9;
+}
+
+header h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.instructions {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.btn-group-example {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
