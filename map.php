@@ -9,6 +9,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" type="text/css" href="map.css" />
     <link rel="stylesheet" type="text/css" href="leaflet.css" />
+    <link rel="stylesheet" href="MarkerCluster.css" />
+    <link rel="stylesheet" href="MarkerCluster.Default.css" />
+    <script src="leaflet.js"></script>
+    <script src="leaflet.markercluster-src.js"></script>
+    <script src="maplayers.js"></script>
 </head>
 
 <body>
@@ -34,7 +39,7 @@
     </div>
 
     <!-- Map -->
-    <div id="map" style="width: 100%; height: 80vh;"></div>
+    <div id="map"></div>
 
     <!-- Map navigation buttons -->
     <div class="container mt-3 text-center">
@@ -44,10 +49,6 @@
         </div>
         <p id="demo" class="text-muted small"></p>
     </div>
-
-    <!-- Scripts -->
-    <script src="leaflet.js"></script>
-    <script src="maplayers.js"></script>
 
     <script>
         <?php if (isset($_POST['url_jsondata']) && !empty($_POST['url_jsondata'])): ?>
@@ -70,15 +71,53 @@
             const dataUrl = "<?php echo $_POST['url_jsondata']; ?>";
 
             if (dataUrl) {
+                const markerClusters = L.markerClusterGroup({
+                    disableClusteringAtZoom: 18,
+                    maxClusterRadius: 60
+                });
+
+                const pointFeatures = [];
+                const otherFeatures = [];
+
                 fetch(dataUrl)
                     .then((response) => {
-                        if (!response.ok) {
-                            throw new Error("Network response was not ok");
-                        }
+                        if (!response.ok) throw new Error("Network response was not ok");
                         return response.json();
                     })
                     .then((data) => {
-                        const layer = L.geoJson(data, {
+                        const geoJsonLayer = L.geoJson(data, {
+                            style: myStyle,
+                            pointToLayer: function(feature, latlng) {
+                                return L.marker(latlng);
+                            },
+                            onEachFeature: function(feature, layer) {
+                                let rows = "";
+                                const p = feature.properties || {};
+
+                                for (const key in p) {
+                                    if (Object.prototype.hasOwnProperty.call(p, key)) {
+                                        let value = String(p[key]);
+                                        const maxLen = 50;
+
+                                        if (value.includes("http")) {
+                                            const shortVal = value.length > maxLen ? value.slice(0, maxLen) + "..." : value;
+                                            rows += `<tr><td><b>${key}:</b> <a href="${p[key]}" target="_blank">${shortVal}</a></td></tr>`;
+                                        } else {
+                                            rows += `<tr><td><b>${key}:</b> ${value}</td></tr>`;
+                                        }
+                                    }
+                                }
+
+                                const popupContent = `<table class="table table-sm table-borderless mb-0">${rows}</table>`;
+                                layer.bindPopup(popupContent);
+                            },
+                            filter: function(feature) {
+                                const t = feature.geometry && feature.geometry.type;
+                                return t === "Point" || t === "MultiPoint";
+                            }
+                        });
+
+                        const vectorLayer = L.geoJson(data, {
                             style: myStyle,
                             onEachFeature: function(feature, layer) {
                                 let rows = "";
@@ -101,7 +140,26 @@
                                 const popupContent = `<table class="table table-sm table-borderless mb-0">${rows}</table>`;
                                 layer.bindPopup(popupContent);
                             },
-                        }).addTo(map);
+                            filter: function(feature) {
+                                const t = feature.geometry && feature.geometry.type;
+                                return t === "LineString" || t === "MultiLineString" ||
+                                    t === "Polygon" || t === "MultiPolygon";
+                            }
+                        });
+
+                        markerClusters.addLayer(geoJsonLayer);
+                        map.addLayer(markerClusters);
+                        vectorLayer.addTo(map);
+
+                        if (markerClusters.getLayers().length > 0) {
+                            map.fitBounds(markerClusters.getBounds(), {
+                                padding: [20, 20]
+                            });
+                        } else if (vectorLayer.getBounds().isValid()) {
+                            map.fitBounds(vectorLayer.getBounds(), {
+                                padding: [20, 20]
+                            });
+                        }
                     })
                     .catch((error) => {
                         console.error("Failed to load GeoJSON data from the provided URL.", error);
